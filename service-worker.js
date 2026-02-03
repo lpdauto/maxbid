@@ -1,7 +1,7 @@
 // service-worker.js
 // Simple PWA cache for the MaxBid calculator
 
-const CACHE_NAME = "maxbid-v7";
+const CACHE_NAME = "maxbid-v8";
 
 const ASSETS = [
   "./",
@@ -54,3 +54,4 @@ self.addEventListener("fetch", (event) => {
     })()
   );
 });
+
