@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0b0b" />
+  <title>IAA / Copart Max Bid Calculator</title>
+
+  <link rel="manifest" href="manifest.webmanifest" />
+
+  <style>
+    :root{
+      --bg:#0b0b0b;
+      --card:#151515;
+      --input:#0f0f0f;
+      --border:#2a2a2a;
+      --accent:#2e6bff;
+      --text:#ffffff;
+      --muted:#b0b0b0;
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    .wrap{max-width:560px;margin:0 auto;padding:18px;}
+    .card{
+      background:var(--card);
+      border-radius:18px;
+      padding:18px;
+      box-shadow:0 10px 28px rgba(0,0,0,.4);
+    }
+    h1{margin:0 0 14px;font-size:20px;font-weight:800;}
+
+    label{display:block;margin:14px 0 6px;font-size:12px;color:var(--muted);}
+    input{
+      width:100%;
+      padding:14px 12px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:var(--input);
+      color:var(--text);
+      font-size:16px;
+    }
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+    .seg{display:flex;gap:10px;margin:8px 0 0;flex-wrap:wrap;}
+    .seg button{
+      flex:1;
+      min-width:90px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--input);
+      color:var(--muted);
+      font-weight:700;
+      cursor:pointer;
+    }
+    .seg button.active{
+      background:rgba(46,107,255,.2);
+      border-color:rgba(46,107,255,.7);
+      color:#fff;
+    }
+
+    .primary{
+      width:100%;
+      margin-top:16px;
+      padding:14px 12px;
+      border:none;
+      border-radius:14px;
+      background:var(--accent);
+      color:#fff;
+      font-size:16px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .result{margin-top:18px;text-align:center;}
+    .label{font-size:12px;color:var(--muted);margin-bottom:4px;}
+    .big{font-size:44px;font-weight:900;letter-spacing:-0.6px;}
+
+    .pills{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px;}
+    .pill{
+      padding:8px 12px;
+      border-radius:999px;
+      background:var(--input);
+      border:1px solid var(--border);
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .stats{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      text-align:left;
+    }
+    .stat{
+      background:var(--input);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+    }
+    .stat .k{font-size:12px;color:var(--muted);margin-bottom:6px;}
+    .stat .v{font-size:18px;font-weight:800;}
+
+    .muted{margin-top:12px;font-size:13px;color:var(--muted);line-height:1.4;}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>IAA / Copart Max Bid Calculator</h1>
+
+      <label>Auction</label>
+      <div class="seg" role="group" aria-label="Auction">
+        <button type="button" class="auctionBtn active" data-auction="iaa">IAA</button>
+        <button type="button" class="auctionBtn" data-auction="copart">Copart</button>
+      </div>
+
+      <label>Target Margin</label>
+      <div class="seg" role="group" aria-label="Target margin">
+        <button type="button" class="marginBtn" data-margin="0.20">20%</button>
+        <button type="button" class="marginBtn active" data-margin="0.25">25%</button>
+        <button type="button" class="marginBtn" data-margin="0.30">30%</button>
+      </div>
+
+      <label>Expected Sell Price ($)</label>
+      <input id="sellPrice" type="number" inputmode="decimal" placeholder="8000" />
+
+      <div class="row">
+        <div>
+          <label>Repair Cost ($)</label>
+          <input id="repairs" type="number" inputmode="decimal" placeholder="0" />
+        </div>
+        <div>
+          <label>Towing / Transport ($)</label>
+          <input id="towing" type="number" inputmode="decimal" placeholder="500" />
+        </div>
+      </div>
+
+      <label>Your Current Bid (optional)</label>
+      <input id="yourBid" type="number" inputmode="decimal" placeholder="4450" />
+
+      <button id="calcBtn" class="primary">Calculate</button>
+
+      <div class="result">
+        <div class="label">MAX HAMMER BID</div>
+        <div id="maxBid" class="big">$—</div>
+
+        <div class="pills">
+          <div id="auctionPill" class="pill">Auction: IAA</div>
+          <div id="marginPill" class="pill">Target Margin: 25%</div>
+          <div id="feeBand" class="pill">Fees: —</div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="k">Total Cost at Max Bid</div>
+            <div id="totalCost" class="v">$—</div>
+          </div>
+          <div class="stat">
+            <div class="k">Profit at Max Bid</div>
+            <div id="profitAtMax" class="v">$—</div>
+          </div>
+        </div>
+
+        <div id="profitInfo" class="muted"></div>
+        <div id="feeNote" class="muted">IAA: dealer fee bands from your receipts.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js"));
+    }
+  </script>
+</body>
+</html>
+
